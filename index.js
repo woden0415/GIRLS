@@ -57,7 +57,7 @@ var asyncReadFile = function () {
       })
     })
     promiseIn.then((str) => {
-      fs.appendFileSync('./message.txt', str)
+      fs.appendFileSync('./images_list.txt', str)
     })
   })
 }
@@ -93,7 +93,7 @@ function getMoreOnPage(pageUrl) {
 
         })
     }).then(imgUrl => {
-      fs.appendFileSync('./images1.txt', imgUrl + '\n')
+      fs.appendFileSync('./images_details.txt', imgUrl + '\n')
     })
   }
 }
@@ -102,14 +102,10 @@ function getMoreOnPage(pageUrl) {
 
 // 从文本读取
 function readFile() {
-  let str = fs.readFileSync('./message.txt', 'utf8')
+  let str = fs.readFileSync('./images_list.txt', 'utf8')
   let arr = str.split('\n')
   console.log(arr.length)
-  // arr.map(function (pageUrl, index) {
-  //   if (index%5 === 0) {
-  //     getMoreOnPage(pageUrl)
-  //   }
-  // })
+
   let i = 0;
   var timer = setInterval(function () {
     getMoreOnPage(arr[i]);

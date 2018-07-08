@@ -9,22 +9,22 @@ var connection = mysql.createConnection({
   database: 'girlbase'
 });
 
-// connection.connect(function (err) {
-//   if (err) {
-//     console.error('error connecting: ' + err.stack);
-//     return;
-//   }
+connection.connect(function (err) {
+  if (err) {
+    console.error('error connecting: ' + err.stack);
+    return;
+  }
 
-//   console.error('connected as id ' + connection.threadId);
-// });
+  console.error('connected as id ' + connection.threadId);
+});
 
 // 读取文件内容
-let str = fs.readFileSync('./images1.txt', 'utf8')
+let str = fs.readFileSync('./images_details.txt', 'utf8')
 let arr = str.split('\n')
 console.log(arr.length)
 
 let str1 = ''
-arr.map((url, index, arr)=>{
+arr.map((url, index, arr) => {
   if (index < arr.length - 1) {
     str1 += `('${url}'),`
   }
