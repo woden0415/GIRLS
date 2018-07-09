@@ -1,5 +1,6 @@
 var mysql = require('mysql');
 var fs = require('fs')
+var http = require('http');
 
 var connection = mysql.createConnection({
   host: '127.0.0.1', //主机
@@ -15,26 +16,44 @@ connection.connect(function (err) {
     return;
   }
 
-  console.error('connected as id ' + connection.threadId);
+  // console.error('connected as id ' + connection.threadId);
 });
 
-// 读取文件内容
-let str = fs.readFileSync('./images_details.txt', 'utf8')
-let arr = str.split('\n')
-console.log(arr.length)
+// // 读取文件内容
+// let str = fs.readFileSync('./images_details.txt', 'utf8')
+// let arr = str.split('\n')
 
-let str1 = ''
-arr.map((url, index, arr) => {
-  if (index < arr.length - 1) {
-    str1 += `('${url}'),`
-  }
-})
-str1 = str1.slice(0, -1);
-let SQL = `INSERT INTO girl_img_tbl (girl_img_url) value ${str1}`;
+// let str1 = ''
+// arr.map((url, index, arr) => {
+//   if (index < arr.length - 1) {
+//     str1 += `('${url}'),`
+//   }
+// })
+// str1 = str1.slice(0, -1);
+// let SQLInsert = `INSERT INTO girl_img_tbl (girl_img_url) value ${str1}`;
 
-connection.query(`${SQL}`, function (error, results, fields) {
+
+let pageNo = 1
+let pageSize = 10
+
+let SQLSelect = `select * from girl_img_tbl limit ${(pageNo-1) * (pageSize)}, ${pageSize};`
+let SQLSelect2 = `select * from girl_img_tbl`;
+
+connection.query(`${SQLSelect2}`, function (error, results, fields) {
   if (error) throw error;
-  console.log(results.insertId);
+  console.log(results.length);
+});
+connection.query(`${SQLSelect}`, function (error, results, fields) {
+  if (error) throw error;
+  let arr1 = []
+  console.log(Array.isArray(results))
+  results.map((item, index, arr)=>{
+    arr1.push(item.girl_img_url)
+    console.log(item.girl_img_url)
+  })
+  console.log(arr1);
 });
 
 connection.end();
+
+
