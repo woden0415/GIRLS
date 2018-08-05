@@ -15,7 +15,6 @@ router.get('/url', function (req, res, next) {
   let url  = ''
   if ((req.method).toLowerCase()=== 'get') {
     url = `${req.protocol}://${req.hostname}:80/imgs${req.url}`
-    // console.log(url)
 
     const myURL = new URL(url);
     let pageNo = myURL.searchParams.get('pageNo')
