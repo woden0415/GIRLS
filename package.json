@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon ./bin/www",
-    "start:prd": "node ./bin/www"
+    "start": "nodemon NODE_ENV=DEV ./bin/www",
+    "start:prd": "pm2 start NODE_ENV=PROD ./bin/www"
   },
   "keywords": [],
   "author": "",

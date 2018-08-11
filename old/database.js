@@ -1,14 +1,28 @@
 var mysql = require('mysql');
 // var fs = require('fs')
 // var http = require('http');
+let runEnv = process.env.NODE_ENV; // 运行环境
+let databaseConfig = {}
+console.log('runEnv', runEnv)
+if (runEnv.toLowerCase() === 'development'){
+  databaseConfig = {
+    host: '127.0.0.1', //主机
+    user: 'root', //MySQL认证用户名
+    password: 'WANGdong123!', //MySQL认证用户密码，没有测试没有密码时为空是否能登陆，不能的话设置下登陆密码
+    port: '3306',
+    database: 'girlbase'
+  }
+} else {
+  databaseConfig = {
+    host: '127.0.0.1', //主机
+    user: 'wandong', //MySQL认证用户名
+    password: 'wangdong123!', //MySQL认证用户密码，没有测试没有密码时为空是否能登陆，不能的话设置下登陆密码
+    port: '3306',
+    database: 'girlbase'
+  }
+}
 
-var connection = mysql.createConnection({
-  host: '127.0.0.1', //主机
-  user: 'root', //MySQL认证用户名
-  password: 'WANGdong123!', //MySQL认证用户密码，没有测试没有密码时为空是否能登陆，不能的话设置下登陆密码
-  port: '3306',
-  database: 'girlbase'
-});
+var connection = mysql.createConnection(databaseConfig);
 
 connection.connect(function (err) {
   if (err) {
