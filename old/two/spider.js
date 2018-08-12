@@ -13,7 +13,7 @@ var fs = require('fs')
 const Throttle = require('superagent-throttle');
 let throttle = new Throttle({
   active: true,     // set false to pause queue
-  rate: 10,          // how many requests can be sent every `ratePer`
+  rate: 5,          // how many requests can be sent every `ratePer`
   ratePer: 1000,   // number of ms in which `rate` requests may be sent
   concurrent: 2     // how many requests can be sent concurrently
 })
@@ -25,33 +25,30 @@ class Label {
 
   getAllLabelsInfos() {
     let url = 'http://www.27270.com/tag/'
-    let arrLabel = [];
     let time = 0;
     let arrList = this.getAllLabelsLink(url);
     arrList.then((result) => {
       console.log('result.length', result.length);
-      // result.map((urlItem, index, arr) => {
-      //   this.getLabelDetail(urlItem).then((aa)=>{
-      //     (function(url, i, a){
-      //       console.log(`请求链接: ${i}    ----     ${url}`);
-      //       if (i === 0) {
-      //         fs.appendFileSync(`${__dirname}/label.js`, `[${JSON.stringify(aa, null, 2)},\n`)
-      //       } else if (i === arr.length - 1) {
-      //         fs.appendFileSync(`${__dirname}/label.js`, `${JSON.stringify(aa, null, 2)}]`)
-      //       } else {
-      //         fs.appendFileSync(`${__dirname}/label.js`, `${JSON.stringify(aa, null, 2)},\n`)
-      //       }
-      //     })(urlItem, index, arr)
-      //   }).catch((e)=>{console.log(e);})
-      // })
-      Promise.all(result.map((urlItem, index, arr) => {
-        return this.getLabelDetail(urlItem)
-      })).then((all) => {
-        console.log('all.length', all.length);
-        fs.appendFileSync(`${__dirname}/label.js`, JSON.stringify(all, null, 2))
-      }).catch((e)=>{
-        console.log(e);
+      result.map((urlItem, index, arr) => {
+        this.getLabelDetail(urlItem).then((aa)=>{
+          (function(url, i, a){
+            console.log(`请求链接: ${i}    ----     ${url}`);
+            if (i === 0) {
+              fs.appendFileSync(`${__dirname}/label.js`, `[${JSON.stringify(aa, null, 2)},\n`)
+            } else if (i === arr.length - 1) {
+              fs.appendFileSync(`${__dirname}/label.js`, `${JSON.stringify(aa, null, 2)}]`)
+            } else {
+              fs.appendFileSync(`${__dirname}/label.js`, `${JSON.stringify(aa, null, 2)},\n`)
+            }
+          })(urlItem, index, arr)
+        }).catch((e)=>{console.log(e);})
       })
+      // Promise.all(result.map((urlItem, index, arr) => {
+      //   return this.getLabelDetail(urlItem)
+      // })).then((all) => {
+      //   console.log('all.length', all.length);
+      //   fs.appendFileSync(`${__dirname}/label.js`, JSON.stringify(all, null, 2))
+      // })
     })
   }
 
@@ -105,12 +102,15 @@ class Label {
             console.log('err.status', err)
           } else {
             let $ = cheerio.load(res.text);
+            let labelPages = $('.TagPage').find('a').length !== 0 ? $('.TagPage').find('a').last().attr('href').split('')[$('.TagPage').find('a').last().attr('href').indexOf('.html') - 1] : 1
             let objLabelInfo = {
               labelName: $('.Tag_Title_Gs').text(),
               labelDesc: $('.TagTop_box_Gs').children('p').text(),
               labelOter: [$('.list_tag').children('a').text()],
-              labelLink: url
+              labelLink: url,
+              pageSize: labelPages
             }
+
             resolve(objLabelInfo)
           }
         })
@@ -118,5 +118,96 @@ class Label {
   }
 }
 
-let label = new Label();
-label.getAllLabelsInfos()
+// let label = new Label();
+// label.getAllLabelsInfos()
+
+/**
+ * 获取对应标签里的所有专辑
+ */
+class Album{
+  constructor() {
+    this.albumInfo = {
+      label: '',
+      title: '',  // 标题
+      desc: '',   // 描述
+      coverUrl: '' // 封面链接
+    }
+  }
+
+  main() {
+    let arrLabel = [];
+    this.getAllLabelsInfos().then((arr) => {
+      // 循环当前数组，取出url，发起请求，获取当前末页 limitLen， 循环limitLen，获取每一页的ablums
+      let arrAlbums = [];
+
+      arr.map((labelItem, labelIndex, labelArr) => {
+        for (let i = 0; i < labelItem.pageSize; i++) {
+          let objAlbum = {};
+          let url = '';
+          if (i === 0 ) {
+            url = labelItem.labelLink
+          } else {
+            url = `${labelItem.labelLink.slice(0, labelItem.labelLink.indexOf('.html'))}_${i+1}.html`
+          }
+          superagent
+            .get(url)
+            .use(throttle.plugin())
+            .set({
+              'Cookie': 'Hm_lvt_63a864f136a45557b3e0cbce07b7e572=1532689632Hm_lpvt_63a864f136a45557b3e0cbce07b7e572=1534031600',
+              'Referer': 'http://www.27270.com/'
+            })
+            .charset('gbk')
+            .end(function (err, res) {
+              if (err) {
+                console.log('err.status', err)
+              } else {
+                let $ = cheerio.load(res.text);
+                let arrA = $('#Tag_list').children('li').children('a');
+                let numAlength = arrA.length;
+                arrA.map((aIndex, aItem) => {
+                  objAlbum = {
+                    label: `${labelItem.labelName}`,
+                    url: `${$(aItem).attr('href')}`,
+                    title: `${$(aItem).attr('title')}`,  // 标题
+                    desc: '',   // 描述
+                    coverUrl: `${$(aItem).children('img').attr('src')}` // 封面链接
+                  }
+                  if (labelIndex === 0 && aIndex === 0) {
+                    fs.appendFileSync(`${__dirname}/album.js`, `[${JSON.stringify(objAlbum, null, 2)},\n`)
+                  } else if (labelIndex === labelArr - 1 && i === labelItem.pageSize - 1 && aIndex === numAlength - 1) {
+                    fs.appendFileSync(`${__dirname}/album.js`, `${JSON.stringify(objAlbum, null, 2)}]`)
+                  } else {
+                    fs.appendFileSync(`${__dirname}/album.js`, `${JSON.stringify(objAlbum, null, 2)},\n`)
+                  }
+
+                })
+              }
+            })
+        }
+      })
+    })
+  }
+
+
+  // @todo 读取所有label的labelLink
+  // @todo 进入label页面，获取页数， 循环页数，获取当前页面的专辑 coverUrl，标注好当前的label
+
+  /**
+   * @description 返回存储的所有标签信息
+   */
+  getAllLabelsInfos() {
+    let promise1 = new Promise((resolve) => {
+      fs.readFile(`${__dirname}/label.js`, (err, data)=> {
+        if (err) {
+          console.log(err);
+          return 0
+        }
+        resolve(JSON.parse(data))
+      })
+    })
+    return promise1
+  }
+}
+
+let album = new Album();
+album.main()
