@@ -21,8 +21,11 @@
     "express": "^4.16.3",
     "hbs": "^4.0.1",
     "http-errors": "^1.7.0",
+    "iconv": "^2.3.0",
     "morgan": "^1.9.0",
     "mysql": "^2.15.0",
-    "request": "^2.87.0"
+    "request": "^2.87.0",
+    "superagent-charset": "^1.2.0",
+    "superagent-throttle": "^0.2.5"
   }
 }
