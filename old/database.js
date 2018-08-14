@@ -1,7 +1,7 @@
 var mysql = require('mysql');
 // var fs = require('fs')
 // var http = require('http');
-let runEnv = process.env.NODE_ENV; // 运行环境
+let runEnv = process.env.NODE_ENV || 'development'; // 运行环境
 let databaseConfig = {}
 console.log('runEnv', runEnv)
 if (runEnv.toLowerCase() === 'development'){
