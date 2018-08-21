@@ -22,6 +22,11 @@
  * )
  */
 
+var DB = require('../util/db')
+
+
+var db = new DB();
+
 
 class Album {
   constructor(albumTitle, albumDesc, labelId, coverUrl) {
@@ -43,6 +48,18 @@ class Album {
     return sql.replace(/[\r\n]/g, "");
   }
 
+  funcSelectAlbum(pageNo, pageSize) {
+    return new Promise((resolve) => {
+      let sql = `select * from base_album_tbl limit ${(pageNo - 1) * (pageSize)}, ${pageSize};`
+      db.exectSql(sql, (err, results, fields) => {
+        if (err) {
+          throw err;
+          return 0;
+        }
+        resolve(results)
+      })
+    })
+  }
 }
 
 exports = module.exports = Album;

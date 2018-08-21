@@ -6,9 +6,7 @@
 
 var express = require('express');
 var router = express.Router();
-let { funcSelectImgs } = require("../old/database")
-// console.log(funcSelectImgs )
-// const querystring = require('querystring');
+var Album = require('../model/Album');
 const { URL, URLSearchParams } = require('url');
 
 router.get('/url', function (req, res, next) {
@@ -20,15 +18,15 @@ router.get('/url', function (req, res, next) {
     let pageNo = myURL.searchParams.get('pageNo')
     let pageSize = myURL.searchParams.get('pageSize')
 
-    funcSelectImgs(pageNo, pageSize).then((result)=>{
+    var album = new Album();
+    album.funcSelectAlbum(pageNo, pageSize).then((result) => {
       let obj = {
         success: true,
-        list: result[0],
-        total: result[1]
+        list: result
       }
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify(obj) );
-    });
+      res.setHeader('Content-Type', 'application/json')
+      res.end(JSON.stringify(obj));
+    })
   }
 });
 
