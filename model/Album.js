@@ -60,6 +60,39 @@ class Album {
       })
     })
   }
+
+  /**
+   *
+   * @param {String} albumId 专辑id
+   */
+  funcGetAlbumInfo(albumId) {
+    return new Promise((resolve) => {
+      let sql = `SELECT album.albumId, album.albumTitle, album.coverUrl, album.albumDesc, img.imgId, img.imgUrl FROM base_img_tbl AS img, relation_img_album_tbl AS ria, base_album_tbl as album WHERE img.imgId = ria.imgId AND ria.albumId = ${albumId} AND album.albumId = ${albumId};`
+      db.exectSql(sql, (err, results, fields) => {
+        if (err) {
+          throw err;
+          return 0;
+        }
+        let objAlbumInfo = {
+          id: '',
+          title: '',
+          coverUrl: '',
+          albumDesc: '',
+          imgLists: []
+        }
+        if (results.length > 0) {
+          objAlbumInfo.id = results[0].albumId;
+          objAlbumInfo.title = results[0].albumTitle;
+          objAlbumInfo.coverUrl = results[0].coverUrl;
+          objAlbumInfo.albumDesc = results[0].albumDesc;
+          results.map((item, index, arr) => {
+            objAlbumInfo.imgLists.push(item.imgUrl)
+          })
+        }
+        resolve(objAlbumInfo);
+      })
+    })
+  }
 }
 
 exports = module.exports = Album;

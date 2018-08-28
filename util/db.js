@@ -40,7 +40,6 @@ class DB {
    * @param {Fcuntion} callback 执行的回调函数 (err, results, fields)=>{}
    */
   exectSql(sql, callback) {
-    console.log('exectSql')
     connection.query(sql, callback)
   }
 
