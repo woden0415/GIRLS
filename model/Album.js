@@ -51,6 +51,8 @@ class Album {
   funcSelectAlbum(pageNo, pageSize) {
     return new Promise((resolve) => {
       let sql = `select * from base_album_tbl limit ${(pageNo - 1) * (pageSize)}, ${pageSize};`
+      console.log('----------------');
+      console.log('object', sql);
       db.exectSql(sql, (err, results, fields) => {
         if (err) {
           throw err;
