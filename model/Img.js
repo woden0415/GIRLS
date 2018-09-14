@@ -21,18 +21,18 @@
 
 
 class Img {
-  constructor(imgUrl, albumId) {
+  constructor(imgUrl, imgId) {
     this.imgUrl = imgUrl;
-    this.albumId = albumId;
+    this.imgId = imgId;
   }
 
   funcInsertSql(arrImg) {
-    let sql = `insert into base_img_tbl (imgUrl, albumId) values `;
+    let sql = `insert into base_img_tbl (imgUrl, imgId) values `;
     arrImg.map((imgItem, imgIndex, imgArr) => {
       if (imgIndex !== imgArr.length - 1) {
-        sql = `${sql}("${imgItem.imgUrl}", "${imgItem.albumId}"),`
+        sql = `${sql}("${imgItem.imgUrl}", "${imgItem.imgId}"),`
       } else {
-        sql = `${sql}("${imgItem.imgUrl}", "${imgItem.albumId}");`
+        sql = `${sql}("${imgItem.imgUrl}", "${imgItem.imgId}");`
       }
     })
     return sql.replace(/[\r\n]/g, "");

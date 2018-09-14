@@ -328,22 +328,23 @@ class Img {
                 // .proxy(proxy)
                 .use(throttle.plugin())
                 .set({
-                  'Cookie': 'Hm_lvt_63a864f136a4532Hm_lpvt_63a864f136031600',
-                  // 'Referer': 'http://www.27270.com/',
+                  'Cookie': 'Hm_lvt_63a864f136a45557b3e0cbce07b7e572=1536940152; Hm_lpvt_63a864f136a45557b3e0cbce07b7e572=1536940716',
+                  'Referer': 'http://www.27270.com/',
+                  "Proxy-Connection": "keep-alive"
                   // 'Proxy-Authorization': `Basic ${appKey}`
                 })
                 .charset('gbk')
                 .end(function (err, res) {
                   if (err) {
-                    appendFile('log/imgerror1.log', `"${url}",`)
+                    appendFile('log/imgerror.log', `"${url}",`)
                   } else {
                     console.log(`"url: ${url}",`)
                     appendFile('log/imgsuccess1.log', `"${url}",`)
                     let $ = cheerio.load(res.text);
                     let objImg = {
-                      albumId: albumItem.albumId,
+                      albumId: albumItem.albumId || '',
                       imgId: generatorRandomString(20),
-                      imgUrl: $('#picBody').find('img').attr('src')
+                      imgUrl: $('#picBody').find('img').attr('src') || ''
                     }
                     fs.appendFile(`${__dirname}/imgs.js`, `${JSON.stringify(objImg, null, 2)},\n`, (err) => {
                       if (err) {

@@ -37,12 +37,12 @@ class Album {
   }
 
   funcInsertSql(arrAlbum) {
-    let sql = `insert into base_album_tbl (albumTitle, albumDesc, labelId, coverUrl) values `;
+    let sql = `insert into base_album_tbl (albumId, albumTitle, albumDesc, coverUrl) values `;
     arrAlbum.map((albumItem, albumIndex, albumArr) => {
       if (albumIndex !== albumArr.length - 1) {
-        sql = `${sql}("${albumItem.title}", "${albumItem.desc}", "${albumItem.labelId}", "${albumItem.coverUrl}"),`
+        sql = `${sql}("${albumItem.albumId}", "${albumItem.title}", "${albumItem.desc}", "${albumItem.coverUrl}"),`
       } else {
-        sql = `${sql}("${albumItem.title}", "${albumItem.desc}", "${albumItem.labelId}", "${albumItem.coverUrl}");`
+        sql = `${sql}("${albumItem.albumId}", "${albumItem.title}", "${albumItem.desc}", "${albumItem.coverUrl}");`
       }
     })
     return sql.replace(/[\r\n]/g, "");

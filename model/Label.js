@@ -29,16 +29,16 @@ class Label {
   }
 
   funcInsertSql(arrLabels) {
-    let sql = `insert into base_label_tbl (labelName, labelDesc, labelOther) values `;
+    let sql = `insert into base_label_tbl (labelId, labelName, labelDesc, labelOther) values `;
     // arrLabels.length = 4;
     arrLabels.map((labelItem, labelIndex, labelArr) => {
       if (labelIndex !== labelArr.length - 1) {
-        sql = sql + `("${labelItem.labelName}", "${labelItem.labelDesc}", "${labelItem.labelOther}"),`
+        sql = sql + `("${labelItem.labelId}", "${labelItem.labelName}", "${labelItem.labelDesc}", "${labelItem.labelOther}"),`
       } else {
-        sql = sql + `("${labelItem.labelName}", "${labelItem.labelDesc}", "${labelItem.labelOther}");`
+        sql = sql + `("${labelItem.labelId}", "${labelItem.labelName}", "${labelItem.labelDesc}", "${labelItem.labelOther}");`
       }
     })
-    console.log(sql.replace(/[\r\n]/g,""))
+    // console.log(sql.replace(/[\r\n]/g,""))
     return sql.replace(/[\r\n]/g,"");
   }
 

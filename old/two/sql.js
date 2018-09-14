@@ -14,7 +14,7 @@ let { funcSelectImgs } = require("../../old/database")
 
 let runEnv = process.env.NODE_ENV || 'development'; // 运行环境
 let databaseConfig = {}
-console.log('runEnv', runEnv)
+// console.log('runEnv', runEnv)
 if (runEnv.toLowerCase() === 'development'){
   databaseConfig = {
     host: '127.0.0.1', //主机
@@ -40,7 +40,6 @@ connection.connect(function (err) {
     console.error('error connecting: ' + err.stack);
     return;
   }
-
   // console.error('connected as id ' + connection.threadId);
 });
 
@@ -63,9 +62,34 @@ function insertLabel() {
   })
 }
 
+function insertRelationLabelAlbum () {
+  getFile('album1.js').then((result) => {
+      let arrAlbum1 = result;
+
+      let sql = `insert into relation_album_label_tbl (albumId, labelId) values `;
+      let albumLen = arrAlbum1.length;
+      for (let i = 0; i < albumLen; i++) {
+        if (i !== albumLen - 1) {
+          sql = sql + `("${arrAlbum1[i].albumId}", "${arrAlbum1[i].labelId}"),`
+        } else {
+          sql = sql + `("${arrAlbum1[i].albumId}", "${arrAlbum1[i].labelId}");`
+        }
+      }
+      // console.log(sql.length)
+      connection.query(sql, function (error, results, fields) {
+        if (error) throw error;
+        console.log('insert relation_album_label_tbl ok')
+        connection.end();
+      })
+    })
+}
+
+// insertRelationLabelAlbum()
+// insertLabel()
 // 插入专辑
 
 function insertAlbum() {
+  console.log('begin')
   fs.readFile(`${__dirname}/album1.js`, (err, data)=> {
     if (err) {
       console.log(err);
@@ -84,10 +108,31 @@ function insertAlbum() {
 }
 
 // insertAlbum()
+function insertRelationAlbumImg () {
+  getFile('imgs.js').then((result) => {
+      let arrImgs = result;
 
+      let sql = `insert into relation_img_album_tbl (imgId, albumId) values `;
+      let imgsLen = arrImgs.length;
+      for (let i = 0; i < imgsLen; i++) {
+        if (i !== imgsLen - 1) {
+          sql = sql + `("${arrImgs[i].imgId}", "${arrImgs[i].albumId}"),`
+        } else {
+          sql = sql + `("${arrImgs[i].imgId}", "${arrImgs[i].albumId}");`
+        }
+      }
+      // console.log(sql.length)
+      connection.query(sql, function (error, results, fields) {
+        if (error) throw error;
+        console.log('insert relation_img_album_tbl ok')
+        connection.end();
+      })
+    })
+}
+insertRelationAlbumImg ()
 
 function insertImg() {
-  fs.readFile(`${__dirname}/aa.js`, (err, data)=> {
+  fs.readFile(`${__dirname}/imgs.js`, (err, data)=> {
     if (err) {
       console.log(err);
       return 0
@@ -97,11 +142,26 @@ function insertImg() {
     let sqlStr = img.funcInsertSql(JSON.parse(data))
     connection.query(sqlStr, function (error, results, fields) {
       if (error) throw error;
-      console.log('ssss')
+      console.log('img insert ok;')
 
       connection.end();
     })
   })
 }
 
-insertImg()
+// insertImg()
+
+
+// 获取文件内容
+function getFile(filename) {
+  let promise1 = new Promise((resolve) => {
+    fs.readFile(`${__dirname}/${filename}`, (err, data)=> {
+      if (err) {
+        console.log(err);
+        return 0
+      }
+      resolve(JSON.parse(data))
+    })
+  })
+  return promise1
+}
