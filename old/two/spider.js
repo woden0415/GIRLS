@@ -7,7 +7,7 @@ var superagent = require('superagent')
 var charset = require("superagent-charset");
 var cheerio = require('cheerio')
 var userAgents = require('./util/userAgent')
-var proxyAgents = require('./util/proxyAgent')
+// var proxyAgents = require('./util/proxyAgent')
 
 require('superagent-proxy')(superagent)
 charset(superagent);
@@ -18,7 +18,7 @@ var appKey = 'bDhHajFKa21xMUtSd0l5TjpIdVgwdmlzSEp4cGVBOTJX';
 const Throttle = require('superagent-throttle');
 let throttle = new Throttle({
   active: true,     // set false to pause queue
-  rate: 20,          // how many requests can be sent every `ratePer`
+  rate: 5,          // how many requests can be sent every `ratePer`
   ratePer: 1000,   // number of ms in which `rate` requests may be sent
   concurrent: 2     // how many requests can be sent concurrently
 })
@@ -219,8 +219,20 @@ class Album{
         return 0
       }
       arrAlbum = JSON.parse(data);
+      let index = 0
+      // let arrLeft = [
+      //   'http://www.27270.com/ent/meinvtupian/2017/170137.html',
+      //   'http://www.27270.com/ent/meinvtupian/2016/168540.html',
+      //   'http://www.27270.com/ent/mingxingbagua/2015/121782.html',
+      //   'http://www.27270.com/ent/mingxingtuku/2015/44897.html',
+      //   'http://www.27270.com/qita/mengtu/2015/31641.html',
+      //   'http://www.27270.com/ent/lianglimeimo/2016/164029.html',
+      //   'http://www.27270.com/ent/meinvtupian/2017/189356.html',
+      //   'http://www.27270.com/ent/mingxingtuku/2015/42403.html',
+      //   'http://www.27270.com/ent/mingxingtuku/2015/46079.html',
+      // ]
       arrAlbum.map((albumItem, albumIndex, albumArr) => {
-        // if (arrLeft.indexOf(albumItem.url) > -1) {
+        // if (arrLeft.includes(albumItem.url)) {
           superagent
             .get(albumItem.url)
             .use(throttle.plugin())
@@ -234,7 +246,7 @@ class Album{
                 // console.log('err.status', albumItem.url)
                 appendFile('log/albumerror.log', albumItem.url + '\n');
               } else {
-                console.log('albumItem.url :', albumItem.url);
+                console.log('index :', ++index);
                 let $ = cheerio.load(res.text);
                 Object.assign(albumItem, {
                   desc: $('.articleV4Desc').children('p').text() || '',
@@ -248,7 +260,7 @@ class Album{
                 })
               }
             })
-        // }
+          // }
       })
     })
   }
@@ -260,7 +272,6 @@ class Album{
       for (var i = 0; i < arr.length; i++) {
         for (var j = i + 1; j < arr.length; j++) {
           if (arr[i].url === arr[j].url) {
-            console.log('url: ', arr[i].url)
             arr.splice(j, 1)
             index++
           }
@@ -290,56 +301,61 @@ class Img {
     }
   }
 
-  // 获取所有专辑、其首页链接、页数
   getAllAlbum() {
-    let arrAlbum = [];
-    fs.readFile(`${__dirname}/album1.js`, (err, data) => {
-      if (err) {
-        console.log('errAllAlbum', )
-        return 0
-      }
-      arrAlbum = JSON.parse(data);
-      arrAlbum.map((albumItem, albumIndex, albumArr) => {
-        for (let i = 0; i < albumItem.pageSize; i++) {
-          let url = ''
-          if (i === 0) {
-            url = albumItem.url;
-          } else {
-            url = `${albumItem.url.slice(0, albumItem.url.indexOf('.html'))}_${i+1}.html`
-          }
-          let userAgent = userAgents[parseInt(Math.random() * userAgents.length)];
-          superagent
-            .get(url)
-            .set({ 'User-Agent': userAgent })
-            .proxy(proxy)
-            .use(throttle.plugin())
-            .set({
-              'Cookie': 'Hm_lvt_63a864f136a45557b3e0cbce07b7e572=1532689632Hm_lpvt_63a864f136a45557b3e0cbce07b7e572=1534031600',
-              'Referer': 'http://www.27270.com/',
-              'Proxy-Authorization': `Basic ${appKey}`
-            })
-            .charset('gbk')
-            .end(function (err, res) {
-              if (err) {
-                appendFile('log/imgerror.log', url)
-              } else {
-                let $ = cheerio.load(res.text);
-                let objImg = {
-                  albumId: albumItem.albumId,
-                  album: albumItem.title,
-                  imgId: generatorRandomString(20),
-                  imgUrl: $('#picBody').find('img').attr('src'),
-                }
-                fs.appendFile(`${__dirname}/imgs.js`, `${JSON.stringify(objImg, null, 2)},\n`, (err) => {
+    Promise.all([getFile(`album1.js`), getFile(`log/imgsuccess.log`)])
+      .then((values) => {
+        let arrAll = values[0];
+        let arrSuccess = values[1] || [];
+        arrAll.map((albumItem, albumIndex, albumArr) => {
+          let pageSize = albumItem.pageSize;
+          for (let i = 0; i < pageSize; i++) {
+            let url = ''
+            if (i === 0) {
+              url = albumItem.url;
+            } else {
+              url = `${albumItem.url.slice(0, albumItem.url.indexOf('.html'))}_${i+1}.html`
+            }
+            let userAgent = userAgents[parseInt(Math.random() * userAgents.length)];
+            // @todo 判断是否已经在池中出现
+            if (!arrSuccess.includes(url)) {
+              superagent
+                .get(url)
+                .timeout({
+                  response: 5000,  // Wait 5 seconds for the server to start sending,
+                  deadline: 60000, // but allow 1 minute for the file to finish loading.
+                })
+                .set({ 'User-Agent': userAgent })
+                // .proxy(proxy)
+                .use(throttle.plugin())
+                .set({
+                  'Cookie': 'Hm_lvt_63a864f136a4532Hm_lpvt_63a864f136031600',
+                  // 'Referer': 'http://www.27270.com/',
+                  // 'Proxy-Authorization': `Basic ${appKey}`
+                })
+                .charset('gbk')
+                .end(function (err, res) {
                   if (err) {
-                    throw err;
+                    appendFile('log/imgerror1.log', `"${url}",`)
+                  } else {
+                    console.log(`"url: ${url}",`)
+                    appendFile('log/imgsuccess1.log', `"${url}",`)
+                    let $ = cheerio.load(res.text);
+                    let objImg = {
+                      albumId: albumItem.albumId,
+                      imgId: generatorRandomString(20),
+                      imgUrl: $('#picBody').find('img').attr('src')
+                    }
+                    fs.appendFile(`${__dirname}/imgs.js`, `${JSON.stringify(objImg, null, 2)},\n`, (err) => {
+                      if (err) {
+                        throw err;
+                      }
+                    })
                   }
                 })
-              }
-            })
-        }
+            }
+          }
+        })
       })
-    })
   }
 
 }
@@ -385,13 +401,13 @@ function appendFile(filename, data) {
 // label.getAllLabelsInfos()
 // label.deleteRepeat()
 
-let album = new Album();
+// let album = new Album();
 // album.main()
-album.getAlbumInfo()
+// album.getAlbumInfo()
 // album.deleteRepeat() // 去重
 
 
-// let img = new Img();
-// img.getAllAlbum();
+let img = new Img();
+img.getAllAlbum();
 
 
