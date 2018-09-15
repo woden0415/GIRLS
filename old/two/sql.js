@@ -44,6 +44,7 @@ connection.connect(function (err) {
 });
 
 // 插入标签
+// insertLabel()
 function insertLabel() {
   fs.readFile(`${__dirname}/label.js`, (err, data)=> {
     if (err) {
@@ -62,10 +63,15 @@ function insertLabel() {
   })
 }
 
+// insertRelationLabelAlbum()
 function insertRelationLabelAlbum () {
   getFile('album1.js').then((result) => {
-      let arrAlbum1 = result;
-
+      let arrAlbum1 = [];
+      result.map((item, index, arr)=>{
+        if (item.coverUrl) {
+          arrAlbum1.push(item)
+        }
+      })
       let sql = `insert into relation_album_label_tbl (albumId, labelId) values `;
       let albumLen = arrAlbum1.length;
       for (let i = 0; i < albumLen; i++) {
@@ -84,10 +90,9 @@ function insertRelationLabelAlbum () {
     })
 }
 
-// insertRelationLabelAlbum()
-// insertLabel()
 // 插入专辑
 
+// insertAlbum()
 function insertAlbum() {
   console.log('begin')
   fs.readFile(`${__dirname}/album1.js`, (err, data)=> {
@@ -96,22 +101,33 @@ function insertAlbum() {
       return 0
     }
     console.log('successs')
+    let arrData = JSON.parse(data);
+    let arrTmp = []
+    arrData.map((item, index, arr)=>{
+      if (item.coverUrl) {
+        arrTmp.push(item)
+      }
+    })
     let album = new Album()
-    let sqlStr = album.funcInsertSql(JSON.parse(data))
+    let sqlStr = album.funcInsertSql(arrTmp)
     connection.query(sqlStr, function (error, results, fields) {
       if (error) throw error;
-      console.log('ssss')
+      console.log('insertAlbum ok')
 
       connection.end();
     })
   })
 }
 
-// insertAlbum()
+insertRelationAlbumImg ()
 function insertRelationAlbumImg () {
   getFile('imgs.js').then((result) => {
-      let arrImgs = result;
-
+      let arrImgs = [];
+      result.map((item, index, arr)=>{
+        if (item.imgUrl) {
+          arrImgs.push(item)
+        }
+      })
       let sql = `insert into relation_img_album_tbl (imgId, albumId) values `;
       let imgsLen = arrImgs.length;
       for (let i = 0; i < imgsLen; i++) {
@@ -129,8 +145,8 @@ function insertRelationAlbumImg () {
       })
     })
 }
-insertRelationAlbumImg ()
 
+// insertImg()
 function insertImg() {
   fs.readFile(`${__dirname}/imgs.js`, (err, data)=> {
     if (err) {
@@ -138,8 +154,16 @@ function insertImg() {
       return 0
     }
     console.log('successs')
+
+    let arrTmp = []
+    let arrData = JSON.parse(data);
+    arrData.map((item, index, arr)=>{
+      if (item.imgUrl) {
+        arrTmp.push(item);
+      }
+    })
     let img = new Img()
-    let sqlStr = img.funcInsertSql(JSON.parse(data))
+    let sqlStr = img.funcInsertSql(arrTmp)
     connection.query(sqlStr, function (error, results, fields) {
       if (error) throw error;
       console.log('img insert ok;')
@@ -149,7 +173,6 @@ function insertImg() {
   })
 }
 
-// insertImg()
 
 
 // 获取文件内容

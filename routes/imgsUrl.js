@@ -26,7 +26,6 @@ router.get('/url', function (req, res, next) {
   let url = ''
   let str = req.url;
   str = str.slice(9)
-  console.log('str', str);
   const myURL = new URL(str);
 
   var options = {

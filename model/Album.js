@@ -69,7 +69,7 @@ class Album {
    */
   funcGetAlbumInfo(albumId) {
     return new Promise((resolve) => {
-      let sql = `SELECT album.albumId, album.albumTitle, album.coverUrl, album.albumDesc, img.imgId, img.imgUrl FROM base_img_tbl AS img, relation_img_album_tbl AS ria, base_album_tbl as album WHERE img.imgId = ria.imgId AND ria.albumId = ${albumId} AND album.albumId = ${albumId};`
+      let sql = `SELECT album.albumId, album.albumTitle, album.coverUrl, album.albumDesc, img.imgId, img.imgUrl FROM base_img_tbl AS img, relation_img_album_tbl AS ria, base_album_tbl as album WHERE img.imgId = ria.imgId AND ria.albumId = "${albumId}" AND album.albumId = "${albumId}";`
       db.exectSql(sql, (err, results, fields) => {
         if (err) {
           throw err;
