@@ -44,12 +44,6 @@ class Label {
           })(urlItem, index, arr)
         }).catch((e)=>{console.log(e);})
       })
-      // Promise.all(result.map((urlItem, index, arr) => {
-      //   return this.getLabelDetail(urlItem)
-      // })).then((all) => {
-      //   console.log('all.length', all.length);
-      //   fs.appendFileSync(`${__dirname}/label.js`, JSON.stringify(all, null, 2))
-      // })
     })
   }
 
@@ -60,7 +54,7 @@ class Label {
    */
   getAllLabelsLink(listUrl) {
     // let arrGirls = [3, 5, 6, 11, 12, 20, 21];
-    let arrGirls = [5]
+    let arrGirls = [ 6, 11, 12,20, 21]
     let promiseA = new Promise((resolve) => {
       let newArr = [];
       superagent
@@ -101,15 +95,16 @@ class Label {
         .charset('gbk')
         .end(function (err, res) {
           if (err) {
-            console.log('err.status', err)
+            appendFile('log/labelerror.log', `"${url}",`);
           } else {
+            appendFile('log/labelsuccess.log', `"${url}",`);
             let $ = cheerio.load(res.text);
             let labelPages = $('.TagPage').find('a').length !== 0 ? $('.TagPage').find('a').last().attr('href').split('')[$('.TagPage').find('a').last().attr('href').indexOf('.html') - 1] : 1
             let objLabelInfo = {
               labelId: generatorRandomString(20),
-              labelName: $('.Tag_Title_Gs').text(),
-              labelDesc: $('.TagTop_box_Gs').children('p').text(),
-              labelOther: [$('.list_tag').children('a').text()],
+              labelName: $('.Tag_Title_Gs').text() || '',
+              labelDesc: $('.TagTop_box_Gs').children('p').text() || '',
+              labelOther: [$('.list_tag').children('a').text()] || [''],
               labelLink: url,
               pageSize: labelPages
             }
@@ -127,7 +122,7 @@ class Label {
       for (let i = 0; i < arr.length; i++) {
         for (let j = i+1; j < arr.length; j++) {
           if (arr[i].labelLink === arr[j].labelLink) {
-            // arr.splice(i, 1);
+            arr.splice(j, 1);
           }
         }
       }
@@ -181,14 +176,14 @@ class Album{
             .charset('gbk')
             .end(function (err, res) {
               if (err) {
-                console.log('err.status', err)
+                appendFile('log/albumerror1.log', `"${url}",`)
               } else {
+                appendFile('log/albumsuccess1.log', `"${url}",`)
                 let $ = cheerio.load(res.text);
                 let arrA = $('#Tag_list').children('li').children('a');
                 let numAlength = arrA.length;
                 let objAlbum = {};
                 arrA.map((aIndex, aItem) => {
-                  // console.log(`${labelItem.labelName} --- ${i}页 --- ${$(aItem).attr('title')}`);
                   objAlbum = {
                     albumId: generatorRandomString(20),
                     labelId: `${labelItem.labelId}`,
@@ -213,27 +208,13 @@ class Album{
   // 获取专辑的描述内容，和总页数
   getAlbumInfo() {
     let arrAlbum = []
-    fs.readFile(`${__dirname}/album.js`, (err, data) => {
-      if (err) {
-        console.log(err)
-        return 0
-      }
-      arrAlbum = JSON.parse(data);
-      let index = 0
-      // let arrLeft = [
-      //   'http://www.27270.com/ent/meinvtupian/2017/170137.html',
-      //   'http://www.27270.com/ent/meinvtupian/2016/168540.html',
-      //   'http://www.27270.com/ent/mingxingbagua/2015/121782.html',
-      //   'http://www.27270.com/ent/mingxingtuku/2015/44897.html',
-      //   'http://www.27270.com/qita/mengtu/2015/31641.html',
-      //   'http://www.27270.com/ent/lianglimeimo/2016/164029.html',
-      //   'http://www.27270.com/ent/meinvtupian/2017/189356.html',
-      //   'http://www.27270.com/ent/mingxingtuku/2015/42403.html',
-      //   'http://www.27270.com/ent/mingxingtuku/2015/46079.html',
-      // ]
-      arrAlbum.map((albumItem, albumIndex, albumArr) => {
-        // if (arrLeft.includes(albumItem.url)) {
-          superagent
+    Promise.all([getFile('album.js'), getFile('log/albumsuccess2.log')])
+      .then((result) => {
+        let arrAlbum = result[0];
+        let successAlbum2 = result[1];
+        arrAlbum.map((albumItem, albumIndex, albumArr) => {
+          if (!successAlbum2.includes(albumItem.url)) {
+            superagent
             .get(albumItem.url)
             .use(throttle.plugin())
             .set({
@@ -243,10 +224,9 @@ class Album{
             .charset('gbk')
             .end(function (err, res) {
               if (err) {
-                // console.log('err.status', albumItem.url)
-                appendFile('log/albumerror.log', albumItem.url + '\n');
+                appendFile('log/albumerror2.log', `"${albumItem.url}",`);
               } else {
-                console.log('index :', ++index);
+                appendFile('log/albumsuccess2.log', `"${albumItem.url}",`);
                 let $ = cheerio.load(res.text);
                 Object.assign(albumItem, {
                   desc: $('.articleV4Desc').children('p').text() || '',
@@ -260,15 +240,15 @@ class Album{
                 })
               }
             })
-          // }
+          }
+        })  
       })
-    })
   }
 
   // 排除专辑里重复的内容
   deleteRepeat() {
     let index = 0
-    getFile('album1.js').then((arr) => {
+    getFile('album.js').then((arr) => {
       for (var i = 0; i < arr.length; i++) {
         for (var j = i + 1; j < arr.length; j++) {
           if (arr[i].url === arr[j].url) {
@@ -316,7 +296,6 @@ class Img {
               url = `${albumItem.url.slice(0, albumItem.url.indexOf('.html'))}_${i+1}.html`
             }
             let userAgent = userAgents[parseInt(Math.random() * userAgents.length)];
-            // @todo 判断是否已经在池中出现
             if (!arrSuccess.includes(url)) {
               superagent
                 .get(url)
@@ -325,21 +304,18 @@ class Img {
                   deadline: 60000, // but allow 1 minute for the file to finish loading.
                 })
                 .set({ 'User-Agent': userAgent })
-                // .proxy(proxy)
                 .use(throttle.plugin())
                 .set({
                   'Cookie': 'Hm_lvt_63a864f136a45557b3e0cbce07b7e572=1536940152; Hm_lpvt_63a864f136a45557b3e0cbce07b7e572=1536940716',
                   'Referer': 'http://www.27270.com/',
                   "Proxy-Connection": "keep-alive"
-                  // 'Proxy-Authorization': `Basic ${appKey}`
                 })
                 .charset('gbk')
                 .end(function (err, res) {
                   if (err) {
                     appendFile('log/imgerror.log', `"${url}",`)
                   } else {
-                    console.log(`"url: ${url}",`)
-                    appendFile('log/imgsuccess1.log', `"${url}",`)
+                    appendFile('log/imgsuccess.log', `"${url}",`)
                     let $ = cheerio.load(res.text);
                     let objImg = {
                       albumId: albumItem.albumId || '',
@@ -410,5 +386,4 @@ function appendFile(filename, data) {
 
 let img = new Img();
 img.getAllAlbum();
-
 

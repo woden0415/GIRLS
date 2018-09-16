@@ -119,7 +119,7 @@ function insertAlbum() {
   })
 }
 
-insertRelationAlbumImg ()
+// insertRelationAlbumImg ()
 function insertRelationAlbumImg () {
   getFile('imgs.js').then((result) => {
       let arrImgs = [];
